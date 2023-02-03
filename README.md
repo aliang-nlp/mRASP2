@@ -1,20 +1,20 @@
 # Contrastive Learning for Many-to-many Multilingual Neural Machine Translation(mCOLT/mRASP2), ACL2021
-The code for training mCOLT/mRASP2, a multilingual neural machine translation training method, implemented based on [fairseq](https://github.com/pytorch/fairseq). 
+The code for training mCOLT/mRASP2, a multilingual NMT training framework, implemented based on [fairseq](https://github.com/pytorch/fairseq).
 
-**mRASP2**: [paper](https://arxiv.org/abs/2105.09501) [blog](https://medium.com/@panxiao1994/mrasp2-multilingual-nmt-advances-via-contrastive-learning-ac8c4c35d63)
+**mRASP2**: [paper](https://arxiv.org/abs/2105.09501)
 
 **mRASP**: [paper](https://www.aclweb.org/anthology/2020.emnlp-main.210.pdf),
 [code](https://github.com/linzehui/mRASP)
 
 ---
 ## News
-We have released two versions, this version is the original one. In this implementation:
-- You should first merge all data, by pre-pending language token before each sentence to indicate the language.
-- AA/RAS muse be done off-line (before binarize), check [this toolkit](https://github.com/linzehui/mRASP/blob/master/preprocess).
+We have released two versions, this version is the new one. In this implementation:
+- You should binarize training data seperately.
+- AA/RAS can be done on-line.
+- We have no ready-to-use checkpoint for this implementation.
 
-**New implementation**: https://github.com/PANXiao1994/mRASP2/tree/new_impl
+**Original implementation**: https://github.com/PANXiao1994/mRASP2 (master branch)
 
-* Acknowledgement: This work is supported by [Bytedance](https://bytedance.com). We thank [Chengqi](https://github.com/zhaocq-nlp) for uploading all files and checkpoints.
 
 ## Introduction
 
@@ -25,114 +25,45 @@ mRASP2/mCOLT, representing multilingual Contrastive Learning for Transformer, is
 ## Pre-requisite
 ```bash
 pip install -r requirements.txt
-# install fairseq
-git clone https://github.com/pytorch/fairseq
-cd fairseq
-pip install --editable ./
 ```
 
-## Training Data and Checkpoints
-We release our preprocessed training data and checkpoints in the following.
-### Dataset
+## Dataset
+| Name | Preprocessed | Binarized |
+| --- | --- | --- |
+| Parallel-pub-100 | [parallel_pub100_prep](http://sf3-ttcdn-tos.pstatp.com/obj/nlp-opensource/acl2021/mrasp2/parallel_pub100_prep/download.sh) |[parallel_pub100_bin](http://sf3-ttcdn-tos.pstatp.com/obj/nlp-opensource/acl2021/mrasp2/parallel_pub100_bin/download.sh) |
+| Mono-pub | [mono_pub_prep](http://sf3-ttcdn-tos.pstatp.com/obj/nlp-opensource/acl2021/mrasp2/mono_prep/download2.sh) | [mono_pub_bin](http://sf3-ttcdn-tos.pstatp.com/obj/nlp-opensource/acl2021/mrasp2/mono_bin/download.sh) |
+| Dev-pub | [test_pub_prep](http://sf3-ttcdn-tos.pstatp.com/obj/nlp-opensource/acl2021/mrasp2/test_prep/download.sh) | [test_pub_bin](http://sf3-ttcdn-tos.pstatp.com/obj/nlp-opensource/acl2021/mrasp2/test_bin/download.sh) |
 
-We merge 32 English-centric language pairs, resulting in 64 directed translation pairs in total. The original 32 language pairs corpus contains about 197M pairs of sentences. We get about 262M pairs of sentences after applying RAS, since we keep both the original sentences and the substituted sentences. We release both the original dataset and dataset after applying RAS.
+## Vocabulary
+* We adopt unigram in [sentencepiece](https://github.com/google/sentencepiece) to learn the subword vocabulary jointly on our in-house dataset of 150 languages. The total size of vocabulary is 100k.
 
-| Dataset | #Pair |
-| --- | --- |
-| [32-lang-pairs-TRAIN](https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/acl2021/mrasp2/bin_parallel/download.sh) | 197603294 |
-| [32-lang-pairs-RAS-TRAIN](https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/acl2021/mrasp2/bin_parallel_ras/download.sh) | 262662792 |
-| [mono-split-a](https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/acl2021/mrasp2/bin_mono_split_a/download.sh) | - |
-| [mono-split-b](https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/acl2021/mrasp2/bin_mono_split_b/download.sh) | - |
-| [mono-split-c](https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/acl2021/mrasp2/bin_mono_split_c/download.sh) | - |
-| [mono-split-d](https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/acl2021/mrasp2/bin_mono_split_d/download.sh) | - |
-| [mono-split-e](https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/acl2021/mrasp2/bin_mono_split_e/download.sh) | - |
-| [mono-split-de-fr-en](https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/acl2021/mrasp2/bin_mono_de_fr_en/download.sh) | - |
-| [mono-split-nl-pl-pt](https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/acl2021/mrasp2/bin_mono_nl_pl_pt/download.sh) | - |
-| [32-lang-pairs-DEV-en-centric](https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/acl2021/mrasp2/bin_dev_en_centric/download.sh) | - |
-| [32-lang-pairs-DEV-many-to-many](https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/acl2021/mrasp2/bin_dev_m2m/download.sh) | - |
-| [Vocab](https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/acl2021/mrasp2/bpe_vocab) | - |
-| [BPE Code](https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/emnlp2020/mrasp/pretrain/dataset/codes.bpe.32000) | - |
+[vocab-spm-100k.dict](http://sf3-ttcdn-tos.pstatp.com/obj/nlp-opensource/acl2021/mrasp2/vocab-spm-100k.dict)
 
+[vocab-spm-100k.model](http://sf3-ttcdn-tos.pstatp.com/obj/nlp-opensource/acl2021/mrasp2/vocab-spm-100k.model)
 
-### Checkpoints & Results
-* **Please note that the provided checkpoint is sightly different from that in the paper.** In the following sections, we report the results of the provided checkpoints.
-
-#### English-centric Directions
-We report **tokenized BLEU** in the following table. Please click the model links to download. It is in pytorch format. (check eval.sh for details)
-
-|Models  | [6e6d-no-mono](https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/acl2021/mrasp2/6e6d_no_mono.pt) | [12e12d-no-mono](https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/acl2021/mrasp2/12e12d_no_mono.pt) | [12e12d](https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/acl2021/mrasp2/12e12d_last.pt) |
-| --- | --- | --- | --- |
-| en2cs/wmt16 | 21.0 | 22.3 | 23.8 |
-| cs2en/wmt16 | 29.6 | 32.4 | 33.2 |
-| en2fr/wmt14 | 42.0 | 43.3 | 43.4 |
-| fr2en/wmt14 | 37.8 | 39.3 | 39.5 |
-| en2de/wmt14 | 27.4 | 29.2 | 29.5 |
-| de2en/wmt14 | 32.2 | 34.9 | 35.2 |
-| en2zh/wmt17 | 33.0 | 34.9 | 34.1 |
-| zh2en/wmt17 | 22.4 | 24.0 | 24.4 |
-| en2ro/wmt16 | 26.6 | 28.1 | 28.7 |
-| ro2en/wmt16 | 36.8 | 39.0 | 39.1 |
-| en2tr/wmt16 | 18.6 | 20.3 | 21.2 |
-| tr2en/wmt16 | 22.2 | 25.5 | 26.1 |
-| en2ru/wmt19 | 17.4 | 18.5 | 19.2 |
-| ru2en/wmt19 | 22.0 | 23.2 | 23.6 |
-| en2fi/wmt17 | 20.2 | 22.1 | 22.9 |
-| fi2en/wmt17 | 26.1 | 29.5 | 29.7 |
-| en2es/wmt13 | 32.8 | 34.1 | 34.6 |
-| es2en/wmt13 | 32.8 | 34.6 | 34.7 |
-| en2it/wmt09 | 28.9 | 30.0 | 30.8 |
-| it2en/wmt09 | 31.4 | 32.7 | 32.8 |
-
-#### Unsupervised Directions
-We report **tokenized BLEU** in the following table. (check eval.sh for details)
-
-| | 12e12d |
-| --- | --- |
-| en2pl/wmt20 | 6.2 |
-| pl2en/wmt20 | 13.5 |
-| en2nl/iwslt14 | 8.8 |
-| nl2en/iwslt14 | 27.1 |
-| en2pt/opus100 | 18.9 |
-| pt2en/opus100 | 29.2 |
-
-#### Zero-shot Directions
-* row: source language
-* column: target language
-We report **[sacreBLEU](https://github.com/mozilla/sacreBLEU)** in the following table.
-
-| 12e12d  | ar | zh | nl | fr | de | ru |
-| --- | --- | --- | --- | --- | --- | --- |
-| ar | - | 32.5 | 3.2 | 22.8 | 11.2 | 16.7 |
-| zh | 6.5 | - | 1.9 | 32.9 | 7.6 | 23.7 |
-| nl | 1.7 | 8.2 | - | 7.5 | 10.2 | 2.9 |
-| fr | 6.2 | 42.3 | 7.5 | - | 18.9 | 24.4 |
-| de | 4.9 | 21.6 | 9.2 | 24.7 | - | 14.4 |
-| ru | 7.1 | 40.6 | 4.5 | 29.9 | 13.5 | - |
+[vocab-spm-100k.vocab](http://sf3-ttcdn-tos.pstatp.com/obj/nlp-opensource/acl2021/mrasp2/vocab-spm-100k.vocab)
 
 ## Training
 ```bash
-export NUM_GPU=4 && bash train_w_mono.sh ${model_config}
+export NUM_GPU=4 && bash train_multilingual.sh ${model_config}
+# or
+export NUM_GPU=4 && bash train_multilingual_w_mono.sh ${model_config}
 ```
-* We give example of `${model_config}` in `${PROJECT_REPO}/examples/configs/parallel_mono_12e12d_contrastive.yml`
+* We give example of `${model_config}` in `${PROJECT_REPO}/examples/configs/parallel-12e12d-emb1024-contrast-ras.yml`
+* The `step_size` parameter in `${model_config}` should be set to 1 if the dataset is not extremely large.
 
-## Inference
-* You must pre-pend the corresponding language token to the source side before binarize the test data.
+## Evaluation
 ```bash
-fairseq-generate ${test_path} \
-    --user-dir ${repo_dir}/mcolt \
-    -s ${src} \
-    -t ${tgt} \
-    --skip-invalid-size-inputs-valid-test \
-    --path ${ckpts} \
-    --max-tokens ${batch_size} \
-    --task translation_w_langtok \
-    ${options} \
-    --lang-prefix-tok "LANG_TOK_"`echo "${tgt} " | tr '[a-z]' '[A-Z]'` \
-    --max-source-positions ${max_source_positions} \
-    --max-target-positions ${max_target_positions} \
-    --nbest 1 | grep -E '[S|H|P|T]-[0-9]+' > ${final_res_file}
-python3 ${repo_dir}/scripts/utils.py ${res_file} ${ref_file} || exit 1;
+export NUM_GPU=4 && bash eval.sh ${test_config} ${model_config} ${spm_model} ${bleutype}
+# `bleutype` must be 'tok' or 'detok'
 ```
+* We give example of `${model_config}` in `${PROJECT_REPO}/examples/configs/eval_benchmarks.yml`
+
+## Generate / Big-infer
+```base
+export NUM_GPU=4 && export NUM_CPU=10 && bash biginfer.sh ${data_config} ${model_config} ${extra_config}
+```
+* We give example in `${PROJECT_REPO}/examples/configs/biginfer`
 
 ## Synonym dictionaries
 We use the bilingual synonym dictionaries provised by [MUSE](https://github.com/facebookresearch/MUSE).
@@ -142,12 +73,14 @@ RAS using [this script](https://github.com/linzehui/mRASP/blob/master/preprocess
 
 | Description | File | Size |
 | --- | --- | --- |
-| dep=1 | [synonym_dict_raw_dep1](https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/acl2021/mrasp2/synonym_dict_raw_dep1) | 138.0 M |
-| dep=2 | [synonym_dict_raw_dep2](https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/acl2021/mrasp2/synonym_dict_raw_dep2) | 1.6 G |
-| dep=3 | [synonym_dict_raw_dep3](https://lf3-nlp-opensource.bytetos.com/obj/nlp-opensource/acl2021/mrasp2/synonym_dict_raw_dep3) | 2.2 G |
+| dep=1 | [synonym_dict_raw_dep1](http://sf3-ttcdn-tos.pstatp.com/obj/nlp-opensource/acl2021/mrasp2/synonym_dict_raw_dep1) | 138.0 M |
+| dep=2 | [synonym_dict_raw_dep2](http://sf3-ttcdn-tos.pstatp.com/obj/nlp-opensource/acl2021/mrasp2/synonym_dict_raw_dep2) | 1.6 G |
+| dep=3 | [synonym_dict_raw_dep3](http://sf3-ttcdn-tos.pstatp.com/obj/nlp-opensource/acl2021/mrasp2/synonym_dict_raw_dep3) | 2.2 G |
+
+* The synonym dictionaries should be preprocessed if you want to use on-line AA(RAS). Check [this script](https://github.com/PANXiao1994/mRASP2/tree/new_impl/preprocess/form_id_dicts.py). We also provide a preprocessed file that is ready to use: [synonym_dict_id_dep1](http://sf3-ttcdn-tos.pstatp.com/obj/nlp-opensource/acl2021/mrasp2/synonym_dict_id_dep1)
 
 ## Contact
-Please contact me via e-mail `panxiao94@163.com` or via [wechat/zhihu](https://fork-ball-95c.notion.site/mRASP2-4e9b3450d5aa4137ae1a2c46d5f3c1fa) or join [the slack group](https://mrasp2.slack.com/join/shared_invite/zt-10k9710mb-MbDHzDboXfls2Omd8cuWqA)!
+Please contact me via e-mail `panxiao94@163.com` or via [wechat/zhihu](https://fork-ball-95c.notion.site/mRASP2-4e9b3450d5aa4137ae1a2c46d5f3c1fa)
 
 ## Citation
 Please cite as:
